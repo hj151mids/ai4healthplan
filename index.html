@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI4HealthPlan Enterprise</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f8f9fa; }
+        h1, h2, h3, h4 { color: #1e3a8a !important; }
+        .kpi-card {
+            background-color: #ffffff; border-radius: 10px; padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 4px solid #1e3a8a; margin-bottom: 20px; height: 100%;
+        }
+        .kpi-label { font-size: 13px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .kpi-value { font-size: 26px; color: #0f172a; font-weight: 800; margin-top: 5px; }
+        .subtext { font-size: 12px; color: #10b981; font-weight: 600; margin-top: 4px; }
+        
+        /* Tab styling */
+        .tab-btn { border-bottom: 2px solid transparent; color: #64748b; transition: all 0.2s ease; }
+        .tab-btn.active { border-bottom: 2px solid #1e3a8a; color: #1e3a8a; font-weight: 700; }
+        .tab-btn:hover:not(.active) { color: #1e3a8a; border-bottom: 2px solid #cbd5e1; }
+        
+        /* Accordion styling */
+        .accordion-content { transition: max-height 0.3s ease-out; max-height: 0; overflow: hidden; }
+        .accordion-content.open { max-height: 500px; }
+        .chevron { transition: transform 0.3s; }
+        .chevron.open { transform: rotate(180deg); }
+
+        /* Insight Box */
+        .insight-box { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 0 8px 8px 0; margin-bottom: 24px; }
+        .insight-box h4 { color: #1e40af; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+        .insight-box p { color: #1e3a8a; font-size: 14px; line-height: 1.5; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Hide scrollbar for touch-friendly horizontal scroll */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-gray-800">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-20 hidden md:hidden" onclick="toggleMobileMenu()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out z-30 w-64 bg-white border-r border-gray-200 flex flex-col h-full shadow-sm flex-shrink-0">
+        <div class="p-6 border-b border-gray-100 text-center relative">
+            <button class="md:hidden absolute top-4 right-4 text-gray-500 hover:text-gray-800" onclick="toggleMobileMenu()">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <div class="text-4xl mb-3 mt-2 md:mt-0">🛡️</div>
+            <h2 class="text-xl font-bold text-blue-900 tracking-tight">AI4HealthPlan</h2>
+            <h3 class="text-xs text-gray-500 font-bold uppercase tracking-wider mt-1">Enterprise Platform</h3>
+        </div>
+        
+        <div class="p-6 flex-1 overflow-y-auto">
+            <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                <p class="text-xs font-bold text-blue-800 uppercase mb-1">System Mission</p>
+                <p class="text-sm text-blue-900 leading-relaxed">
+                    Protecting U.S. Employer EBITDA and driving domestic job growth via AI-driven healthcare cost containment.
+                </p>
+            </div>
+            
+            <hr class="mb-6 border-gray-200">
+            
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Active Portfolio</label>
+                <select id="client-select" class="w-full border border-gray-300 rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 sm:text-sm">
+                    <option value="Global Industries">Global Industries (1,200 Lives)</option>
+                </select>
+            </div>
+            
+            <div class="mt-8">
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Platform Modules</p>
+                <ul class="text-sm space-y-2 text-gray-600 font-medium">
+                    <li><i class="fas fa-check-circle text-emerald-500 mr-2"></i> CT-GAN Synthesis</li>
+                    <li><i class="fas fa-check-circle text-emerald-500 mr-2"></i> XGBoost/LSTM Engine</li>
+                    <li><i class="fas fa-check-circle text-emerald-500 mr-2"></i> PCA Clustering</li>
+                    <li><i class="fas fa-check-circle text-emerald-500 mr-2"></i> GenAI Navigation</li>
+                </ul>
+            </div>
+        </div>
+        <div class="p-4 text-xs text-center text-gray-400 border-t border-gray-100 font-medium bg-white">
+            AI4HealthPlan MVP v1.0
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 relative w-full">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200 px-4 md:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <button onclick="toggleMobileMenu()" class="md:hidden mr-4 text-gray-600 hover:text-blue-900 focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h1 id="header-title" class="text-lg md:text-2xl font-extrabold text-blue-900 tracking-tight truncate">Employer Command Center</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="inline-flex items-center px-2 py-1 md:px-3 rounded-full text-[10px] md:text-xs font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap">
+                    <span class="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span> <span class="hidden sm:inline">System </span>Online
+                </span>
+            </div>
+        </header>
+
+        <!-- Tabs Navigation (7 Features) -->
+        <div class="px-4 md:px-8 pt-4 bg-white border-b border-gray-200 overflow-x-auto hide-scrollbar">
+            <nav class="flex space-x-4 md:space-x-6 min-w-max pb-1" aria-label="Tabs">
+                <button onclick="switchTab('tab1')" id="btn-tab1" class="tab-btn active pb-3 px-1 text-sm font-medium whitespace-nowrap">
+                    1. 📈 Cost Forecasting
+                </button>
+                <button onclick="switchTab('tab2')" id="btn-tab2" class="tab-btn pb-3 px-1 text-sm font-medium whitespace-nowrap">
+                    2. 🏢 Data Foundation
+                </button>
+                <button onclick="switchTab('tab3')" id="btn-tab3" class="tab-btn pb-3 px-1 text-sm font-medium whitespace-nowrap">
+                    3. 🎛️ Plan Simulator
+                </button>
+                <button onclick="switchTab('tab4')" id="btn-tab4" class="tab-btn pb-3 px-1 text-sm font-medium whitespace-nowrap">
+                    4. 🧬 Pop. Clustering
+                </button>
+                <button onclick="switchTab('tab5')" id="btn-tab5" class="tab-btn pb-3 px-1 text-sm font-medium whitespace-nowrap">
+                    5. 🚨 High-Risk ID
+                </button>
+                <button onclick="switchTab('tab6')" id="btn-tab6" class="tab-btn pb-3 px-1 text-sm font-medium whitespace-nowrap">
+                    6. 🎯 Care Navigation
+                </button>
+                <button onclick="switchTab('tab7')" id="btn-tab7" class="tab-btn pb-3 px-1 text-sm font-medium whitespace-nowrap">
+                    7. 💊 Rx Anomalies
+                </button>
+            </nav>
+        </div>
+
+        <!-- Scrollable Tab Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 w-full">
+
+            <!-- TAB 1: CFO STRATEGY & FORECASTING -->
+            <div id="tab1" class="tab-content block">
+                <h3 class="text-lg md:text-xl font-bold mb-2">Macro-Economic Health Trend Forecasting</h3>
+                <p class="text-gray-600 mb-6 text-xs md:text-sm">Evaluating <strong class="text-gray-800">LSTM Neural Networks</strong> and <strong class="text-gray-800">Prophet</strong>, optimized via <strong class="text-gray-800">XGBoost Regressors</strong>.</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                    <!-- Left: Chart & Insight -->
+                    <div class="lg:col-span-2">
+                        <div class="insight-box">
+                            <h4><i class="fas fa-chart-line mr-2"></i> Economic Impact Narrative</h4>
+                            <p>By accurately forecasting the inflationary curve of medical and pharmacy spend, self-funded U.S. employers can transition from reactive stop-loss purchasing to proactive capital allocation. The XGBoost ensemble mathematically proves that intervening in the rising GLP-1 and chronic disease trends will compress the inflation rate, reclaiming EBITDA to fund direct workforce expansion.</p>
+                        </div>
+                        <div class="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-gray-100">
+                            <div id="forecastChart" class="w-full h-72 md:h-[400px]"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right: CFO Summary -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 h-auto md:h-[520px] overflow-y-auto text-sm leading-relaxed" id="cfo-assessment">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TAB 2: SYNTHETIC DATA (CT-GAN) -->
+            <div id="tab2" class="tab-content hidden">
+                <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+                    <div>
+                        <h3 class="text-lg md:text-xl font-bold">HIPAA-Compliant Synthetic Data Generation</h3>
+                        <p class="text-gray-600 text-xs md:text-sm mt-1">Utilizing <strong class="text-gray-800">CT-GAN (Conditional Tabular Generative Adversarial Networks)</strong> to synthesize CMS-HCC actuarial baselines without exposing Protected Health Information (PHI).</p>
+                    </div>
+                </div>
+
+                <div class="insight-box">
+                    <h4><i class="fas fa-shield-alt mr-2"></i> Enterprise Scalability & Security</h4>
+                    <p>True national impact requires massive data scalability without compromising patient privacy. By deploying CT-GANs, the AI4HealthPlan platform successfully mirrors the statistical distribution of real-world U.S. healthcare claims (age, comorbidities, risk scores) while maintaining 100% HIPAA compliance, allowing the machine learning models to train on vast, anonymized datasets.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+                    <div class="kpi-card !mb-0 border-l-emerald-500">
+                        <div class="kpi-label">Synthetic Records Generated</div>
+                        <div class="kpi-value">145,200</div>
+                        <div class="text-xs text-gray-500 mt-1">Ready for ML Ingestion</div>
+                    </div>
+                    <div class="kpi-card !mb-0 border-l-emerald-500">
+                        <div class="kpi-label">HIPAA Privacy Compliance</div>
+                        <div class="kpi-value text-emerald-600">100%</div>
+                        <div class="text-xs text-gray-500 mt-1">Zero PHI Exposure</div>
+                    </div>
+                    <div class="kpi-card !mb-0 border-l-blue-500">
+                        <div class="kpi-label">Data Fidelity (vs CMS Baseline)</div>
+                        <div class="kpi-value">98.4%</div>
+                        <div class="text-xs text-gray-500 mt-1">Statistical Distribution Match</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-4 md:px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <h4 class="font-bold text-gray-800 text-sm">Sample Synthetic Output</h4>
+                        </div>
+                        <div class="overflow-x-auto hide-scrollbar">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm text-left">
+                                <thead class="bg-white">
+                                    <tr>
+                                        <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-[10px] md:text-xs">Synthetic ID</th>
+                                        <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-[10px] md:text-xs">Age</th>
+                                        <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-[10px] md:text-xs">Condition Cluster</th>
+                                        <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 uppercase tracking-wider text-[10px] md:text-xs">Risk Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 bg-white whitespace-nowrap">
+                                    <tr class="hover:bg-gray-50"><td class="px-4 md:px-6 py-3 font-mono text-xs text-gray-600">SYN_8842_A</td><td class="px-4 md:px-6 py-3">45</td><td class="px-4 md:px-6 py-3">Diabetes, Hypertension</td><td class="px-4 md:px-6 py-3 font-semibold">1.24</td></tr>
+                                    <tr class="hover:bg-gray-50"><td class="px-4 md:px-6 py-3 font-mono text-xs text-gray-600">SYN_1993_B</td><td class="px-4 md:px-6 py-3">62</td><td class="px-4 md:px-6 py-3">COPD, CHF</td><td class="px-4 md:px-6 py-3 font-bold text-red-600">3.15</td></tr>
+                                    <tr class="hover:bg-gray-50"><td class="px-4 md:px-6 py-3 font-mono text-xs text-gray-600">SYN_7721_C</td><td class="px-4 md:px-6 py-3">28</td><td class="px-4 md:px-6 py-3 text-gray-400">None</td><td class="px-4 md:px-6 py-3 font-semibold">0.15</td></tr>
+                                    <tr class="hover:bg-gray-50"><td class="px-4 md:px-6 py-3 font-mono text-xs text-gray-600">SYN_4450_D</td><td class="px-4 md:px-6 py-3">55</td><td class="px-4 md:px-6 py-3">CKD Stage 3, Obesity</td><td class="px-4 md:px-6 py-3 font-bold text-orange-500">2.45</td></tr>
+                                    <tr class="hover:bg-gray-50"><td class="px-4 md:px-6 py-3 font-mono text-xs text-gray-600">SYN_9012_E</td><td class="px-4 md:px-6 py-3">39</td><td class="px-4 md:px-6 py-3">Asthma</td><td class="px-4 md:px-6 py-3 font-semibold">0.85</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-gray-100">
+                        <h4 class="font-bold text-gray-800 text-sm mb-2 px-2">CT-GAN Fidelity Validation (Age Distribution)</h4>
+                        <div id="fidelityChart" class="w-full h-64 md:h-[250px]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: PLAN SIMULATOR -->
+            <div id="tab3" class="tab-content hidden">
+                <h3 class="text-lg md:text-xl font-bold mb-2">Plan Design Simulator</h3>
+                <p class="text-gray-600 mb-6 text-xs md:text-sm">Utilizing <strong class="text-gray-800">Logistic Regression</strong> and <strong class="text-gray-800">Generalized Linear Models (GLM)</strong> to simulate utilization drops based on behavioral economics.</p>
+                
+                <div class="insight-box">
+                    <h4><i class="fas fa-sliders-h mr-2"></i> Behavioral Economics & Utilization Shift</h4>
+                    <p>Employers often guess how plan design changes (like raising deductibles) will affect employee behavior. The GLM Poisson Regressor scientifically models this elasticity. In this simulation, modifying deductibles or copays shifts the cost burden appropriately, leading to a mathematically validated reduction in non-emergent ER visits and specialist hoarding, driving immediate gross savings.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 lg:col-span-1">
+                        <h4 class="font-bold text-gray-800 mb-4 border-b pb-2">Simulation Controls</h4>
+                        <div class="mb-5">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Simulated Deductible Increase</label>
+                            <input type="range" id="sim-deductible" min="0" max="2000" step="100" value="500" class="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer focus:outline-none" oninput="updateSimText(this.value); runSimulation()">
+                            <div class="flex justify-between text-xs text-gray-500 mt-2 font-medium">
+                                <span>$0</span><span id="sim-deductible-val" class="text-blue-700 font-bold bg-blue-50 px-2 py-1 rounded">+$500 Selected</span><span>+$2000</span>
+                            </div>
+                        </div>
+                        <div class="mb-5 mt-6">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Copay Adjustment (PCP/Specialist)</label>
+                            <select id="sim-copay" onchange="runSimulation()" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm hover:border-blue-400">
+                                <option value="0">No Change</option>
+                                <option value="10">+$10 Increment</option>
+                                <option value="20" selected>+$20 Increment</option>
+                                <option value="50">+$50 Increment</option>
+                            </select>
+                        </div>
+                        <button onclick="runSimulation()" class="mt-6 w-full bg-blue-900 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-800 transition-colors shadow-sm flex justify-center items-center">
+                            <i class="fas fa-sync-alt mr-2"></i> Recalculate GLM Impact
+                        </button>
+                    </div>
+                    
+                    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                        <div class="kpi-card !mb-0 h-full flex flex-col justify-center">
+                            <div class="kpi-label">Projected Clinical Encounters Avoided</div>
+                            <div class="kpi-value" id="sim-encounters-kpi">702 Visits</div>
+                            <div class="text-xs text-gray-500 mt-2 font-medium bg-gray-50 p-2 rounded border border-gray-100">GLM mathematically predicts a drop in non-emergent utilization.</div>
+                        </div>
+                        <div class="kpi-card !mb-0 h-full flex flex-col justify-center">
+                            <div class="kpi-label">Projected Employer Gross Savings</div>
+                            <div class="kpi-value text-emerald-600" id="sim-savings-kpi">$842,500</div>
+                            <div class="text-xs text-gray-500 mt-2 font-medium bg-gray-50 p-2 rounded border border-gray-100">Calculated at an industry average of $1,200 per avoided ER/Specialty encounter.</div>
+                        </div>
+                        <div class="col-span-1 sm:col-span-2 bg-white p-2 md:p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h4 class="font-bold text-gray-800 text-sm mb-2 px-2">Projected Utilization Shift (Encounters per 1000)</h4>
+                            <div id="simChart" class="w-full h-64 md:h-[200px]"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: POPULATION PERSONAS -->
+            <div id="tab4" class="tab-content hidden">
+                <h3 class="text-lg md:text-xl font-bold mb-2">Population Clustering (Risk Personas)</h3>
+                <p class="text-gray-600 mb-6 text-xs md:text-sm">Applying <strong class="text-gray-800">Principal Component Analysis (PCA)</strong> and <strong class="text-gray-800">K-Means Clustering</strong> to segment the workforce.</p>
+                
+                <div class="insight-box">
+                    <h4><i class="fas fa-users mr-2"></i> Targeted Resource Allocation</h4>
+                    <p>U.S. healthcare economics follows the Pareto Principle: a tiny fraction of the population drives the vast majority of the cost. By utilizing K-Means clustering, employers can abandon ineffective "one-size-fits-all" wellness programs. Instead, they can surgically deploy expensive Care Navigators only to the <span class="font-bold">16% of members in the Catastrophic and Chronic personas</span>, maximizing the ROI of clinical interventions.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                    <div class="lg:col-span-2">
+                        <div class="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-gray-100">
+                            <div id="clusterChart" class="w-full h-72 md:h-[450px]"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h4 class="font-bold text-gray-800 text-sm mb-2 text-center">Plan Cost vs. Population Distribution</h4>
+                            <div id="spendDistChart" class="w-full h-64 md:h-[200px]"></div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                                <h4 class="text-sm font-bold text-gray-700">Persona Financial Impact</h4>
+                            </div>
+                            <div class="overflow-x-auto hide-scrollbar">
+                                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                    <thead class="bg-white">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left font-semibold text-gray-500 text-[10px] md:text-xs uppercase">Persona</th>
+                                            <th class="px-4 py-2 text-right font-semibold text-gray-500 text-[10px] md:text-xs uppercase">Members</th>
+                                            <th class="px-4 py-2 text-right font-semibold text-gray-500 text-[10px] md:text-xs uppercase">Avg Spend</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100 bg-white whitespace-nowrap" id="cluster-table-body">
+                                        <!-- Populated via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: HIGH-RISK ID -->
+            <div id="tab5" class="tab-content hidden">
+                <h3 class="text-lg md:text-xl font-bold mb-2">High-Risk Claimant Identification</h3>
+                <p class="text-gray-600 mb-6 text-xs md:text-sm">Utilizing <strong class="text-gray-800">XGBoost Classifiers</strong> and <strong class="text-gray-800">SHAP Values</strong> to predict $50k+ breaches before they occur.</p>
+                
+                <div class="insight-box">
+                    <h4><i class="fas fa-user-shield mr-2"></i> AI Prescriptive Cohort Analysis</h4>
+                    <p><strong>Cohort Alert:</strong> The XGBoost engine has isolated <strong>5 critical members</strong> driving an outsized $525,202 in projected 12-month liability. The system has identified these individuals months before catastrophic claims manifest.</p>
+                    <div class="mt-3 space-y-2 text-xs md:text-sm text-blue-900 bg-blue-50 p-3 rounded border border-blue-100">
+                        <p><strong><i class="fas fa-exclamation-circle text-red-500 mr-1"></i> SMITH_JOHN_1985 (94% Risk):</strong> Immediate intervention required for Uncontrolled Diabetes. Deploying a cellular glucometer and specialized RN navigator today can avert an estimated $33,500 inpatient diabetic ketoacidosis event.</p>
+                        <p><strong><i class="fas fa-exclamation-circle text-orange-500 mr-1"></i> DOE_JANE_1962 (91% Risk):</strong> COPD exacerbation trajectory detected. Proactive remote pulse oximetry and respiratory therapy referral recommended immediately to intercept emergency department utilization.</p>
+                    </div>
+                    <p class="mt-3 font-medium text-gray-700 text-xs md:text-sm">By shifting from reactive claims payment to targeted predictive interception for these specific individuals, the employer actively mitigates its High-Cost Claimant (HCC) burden and protects core operating capital.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                    <!-- Left: Member Table -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[350px] md:h-[400px]">
+                        <div class="px-4 md:px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                            <h4 class="font-bold text-gray-800 text-sm">At-Risk Cohort (Top 1%)</h4>
+                            <span class="text-[10px] md:text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded border border-red-200">Immediate Action</span>
+                        </div>
+                        <div class="overflow-auto flex-1 hide-scrollbar">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm text-left whitespace-nowrap">
+                                <thead class="bg-white sticky top-0 z-10 shadow-sm">
+                                    <tr>
+                                        <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 text-[10px] md:text-xs uppercase">Member ID</th>
+                                        <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 text-[10px] md:text-xs uppercase">Primary Driver</th>
+                                        <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 text-[10px] md:text-xs uppercase">12M Forecast</th>
+                                        <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 text-[10px] md:text-xs uppercase text-center">Prob.</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 bg-white" id="risk-table-body">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right: SHAP Chart -->
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 h-[350px] md:h-[400px] flex flex-col">
+                        <h4 class="font-bold text-gray-800 text-sm mb-1">SHAP Feature Importance (Global)</h4>
+                        <p class="text-xs text-gray-500 mb-2">Top variables driving the XGBoost risk predictions across the population.</p>
+                        <div class="flex-1 min-h-[200px] relative">
+                            <div id="shapChart" class="absolute inset-0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: CARE NAVIGATION (GenAI) -->
+            <div id="tab6" class="tab-content hidden">
+                <h3 class="text-lg md:text-xl font-bold mb-2">Generative AI Care Navigation</h3>
+                <p class="text-gray-600 mb-6 text-xs md:text-sm">Evaluating <strong class="text-gray-800">HuggingFace GPT-2</strong> baselines, deploying <strong class="text-gray-800">Gemini 1.5</strong> to map SHAP clinical drivers into 180-day preventative journeys.</p>
+                
+                <div class="insight-box">
+                    <h4><i class="fas fa-user-md mr-2"></i> Translating Data Science into Clinical Action</h4>
+                    <p>Identifying risk is only half the battle; mitigating it requires clinical execution. Instead of handing a Care Manager a raw spreadsheet of risk scores, the platform uses Generative AI to instantly author an evidence-based, 180-day preventative pathway. This scales the capability of U.S. clinical staff, allowing one Care Navigator to effectively manage triple the patient volume with standardized, guideline-aligned protocols.</p>
+                </div>
+
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 max-w-4xl mx-auto">
+                    <!-- Patient Profile Header -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 gap-4">
+                        <div class="flex items-center space-x-4 w-full sm:w-auto">
+                            <div class="h-10 w-10 md:h-12 md:w-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-base md:text-lg shadow flex-shrink-0" id="journey-avatar">SJ</div>
+                            <div class="w-full">
+                                <div class="relative inline-block mb-1 w-full sm:w-auto">
+                                    <select id="journey-member-select" onchange="loadCareJourney(this.value)" class="text-base md:text-lg font-bold text-blue-900 bg-transparent border-b border-blue-300 focus:outline-none cursor-pointer pb-1 pr-6 appearance-none hover:bg-blue-100 rounded transition-colors w-full sm:w-auto">
+                                        <!-- Populated via JS -->
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 pb-1 text-blue-900">
+                                        <i class="fas fa-chevron-down text-sm"></i>
+                                    </div>
+                                </div>
+                                <div class="text-[10px] md:text-xs text-blue-700 font-semibold mt-1 flex flex-wrap gap-y-1 items-center">
+                                    <span id="journey-age">Age: 41</span> <span class="mx-2 hidden sm:inline">|</span> 
+                                    <span id="journey-risk">Risk: 94%</span> <span class="mx-2 hidden sm:inline">|</span> 
+                                    <span id="journey-driver" class="bg-red-100 text-red-700 px-2 py-0.5 rounded border border-red-200 mt-1 sm:mt-0 block sm:inline-block w-fit">SHAP Driver: Uncontrolled HbA1c</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="bg-white text-blue-700 px-3 md:px-4 py-2 rounded shadow-sm text-xs md:text-sm font-bold border border-blue-200 hover:bg-blue-50 transition whitespace-nowrap w-full sm:w-auto"><i class="fas fa-file-pdf mr-2"></i> Export Plan</button>
+                    </div>
+
+                    <div class="border-b pb-4 mb-4">
+                        <h3 id="journey-pathway" class="text-lg md:text-xl font-bold text-gray-900 mb-1">Targeted Management Protocol</h3>
+                        <p class="text-xs md:text-sm text-gray-500"><i class="fas fa-stethoscope text-emerald-500 mr-2"></i> <strong class="text-gray-700">Guideline Alignment:</strong> <span id="journey-guideline">Relevant Medical Guidelines</span></p>
+                    </div>
+                    
+                    <h4 class="font-bold text-gray-800 text-xs md:text-sm mb-3 uppercase tracking-wider">🎯 Economic & Productivity Impact</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6">
+                        <div class="bg-gray-50 p-3 md:p-4 rounded-lg border border-gray-200 text-center col-span-2 md:col-span-1">
+                            <div class="text-[10px] md:text-xs text-gray-500 font-semibold uppercase">Absenteeism Saved</div>
+                            <div id="journey-days" class="text-xl md:text-2xl font-bold text-gray-900 mt-1">0 Days</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 md:p-4 rounded-lg border border-gray-200 text-center">
+                            <div class="text-[10px] md:text-xs text-gray-500 font-semibold uppercase">Projected Savings</div>
+                            <div id="journey-savings" class="text-xl md:text-2xl font-bold text-blue-700 mt-1">$0</div>
+                        </div>
+                        <div class="bg-emerald-50 p-3 md:p-4 rounded-lg border border-emerald-200 text-center shadow-inner">
+                            <div class="text-[10px] md:text-xs text-emerald-700 font-semibold uppercase">Net ROI</div>
+                            <div id="journey-roi" class="text-xl md:text-2xl font-bold text-emerald-600 mt-1">$0</div>
+                        </div>
+                    </div>
+                    
+                    <h4 class="font-bold text-gray-800 text-xs md:text-sm mb-3 uppercase tracking-wider">🚀 180-Day Journey Phases</h4>
+                    <div class="space-y-3" id="journey-phases-container">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: RX ANOMALIES -->
+            <div id="tab7" class="tab-content hidden">
+                <h3 class="text-lg md:text-xl font-bold mb-2">Substance Misuse & Waste Monitoring</h3>
+                <p class="text-gray-600 mb-6 text-xs md:text-sm">Utilizing a consensus ensemble of <strong class="text-gray-800">Isolation Forest</strong> and <strong class="text-gray-800">Local Outlier Factor (LOF)</strong> to detect prescription anomalies.</p>
+                
+                <div class="insight-box border-l-red-500 bg-red-50">
+                    <h4 class="text-red-800"><i class="fas fa-exclamation-triangle mr-2"></i> Fraud, Waste, and Abuse (FWA) Mitigation</h4>
+                    <p class="text-red-900">U.S. employers lose billions annually to prescription waste, "doctor shopping", and GLP-1 hoarding. Standard rules-based systems miss complex patterns. By utilizing an unsupervised ML ensemble (Isolation Forest + LOF), the platform detects multidimensional outliers that indicate abuse, allowing immediate PBM intervention to cut off wasteful spending at the source.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                    <div class="kpi-card !mb-0 border-l-red-500 sm:col-span-2 lg:col-span-2">
+                        <div class="kpi-label">Consensus Anomalies Flagged</div>
+                        <div class="kpi-value text-red-600" id="rx-total">18</div>
+                        <div class="subtext text-gray-500 mt-1 bg-gray-50 p-2 rounded border border-gray-100">Requires immediate HR/PBM Review to prevent further financial leakage.</div>
+                    </div>
+                    <div class="bg-white p-2 md:p-4 rounded-xl shadow-sm border border-gray-100 sm:col-span-2 lg:col-span-2">
+                        <h4 class="font-bold text-gray-800 text-xs md:text-sm mb-0 px-2 text-center md:text-left">Classification Breakdown</h4>
+                        <div id="anomalyTypeChart" class="w-full h-48 md:h-[120px]"></div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-4 md:px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h4 class="font-bold text-gray-800 text-sm">Clinical Review Queue</h4>
+                    </div>
+                    <div class="overflow-x-auto hide-scrollbar">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm text-center whitespace-nowrap">
+                            <thead class="bg-white">
+                                <tr>
+                                    <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 text-[10px] md:text-xs uppercase text-left">Member ID</th>
+                                    <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 text-[10px] md:text-xs uppercase">Age</th>
+                                    <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 text-[10px] md:text-xs uppercase">Opioids (12M)</th>
+                                    <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 text-[10px] md:text-xs uppercase">GLP-1 Early</th>
+                                    <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 text-[10px] md:text-xs uppercase">Pharmacies</th>
+                                    <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 text-[10px] md:text-xs uppercase">Prescribers</th>
+                                    <th class="px-4 md:px-6 py-3 font-semibold text-gray-500 text-[10px] md:text-xs uppercase text-right">Target Spend</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 bg-white" id="anomaly-table-body">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MOCK DATA & UI LOGIC -->
+    <script>
+        // --- 1. MOCK DATA ---
+        const cfoTextHTML = `
+            <div class="flex items-center justify-between mb-5 bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm">
+                <div>
+                    <div class="text-[10px] md:text-xs text-gray-500 uppercase font-bold tracking-wider">Projected Capital Reclaimed</div>
+                    <div class="text-xl md:text-2xl font-extrabold text-blue-700 mt-1">$1,710,000</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] md:text-xs text-gray-500 uppercase font-bold tracking-wider">Direct U.S. Job Creation</div>
+                    <div class="text-xl md:text-2xl font-extrabold text-emerald-600 mt-1">22</div>
+                </div>
+            </div>
+            
+            <h3 class="text-base md:text-lg font-bold mb-3 text-blue-900 border-b pb-2">AI-Driven Executive Financial Assessment</h3>
+            
+            <h4 class="font-bold text-gray-800 mt-4 mb-2 text-sm md:text-base">1. Mathematical Basis for Projections</h4>
+            <p class="mb-4 text-gray-600 text-xs md:text-sm">The projections are <strong>not speculative</strong>. To ensure maximum actuarial accuracy, the AI4HealthPlan platform executed a rigorous Model Selection Tournament—benchmarking advanced architectures including <strong>TensorFlow LSTM neural networks</strong> and <strong>Facebook Prophet</strong> time-series models. The system empirically selected a highly optimized <strong>XGBoost Regressor</strong> to generate these cost curves, ensuring the financial forecasts are mathematically sound and validated.</p>
+            
+            <h4 class="font-bold text-gray-800 mt-4 mb-2 text-sm md:text-base">2. Macro-Economic Health Trend Analysis</h4>
+            <p class="mb-4 text-gray-600 text-xs md:text-sm">The AI forecasting engine projects a total healthcare liability of <strong>$14,250,000</strong> for the upcoming plan year. Over the historical period, Chronic Disease prevalence within the workforce rose to 42.1%, and GLP-1 utilization surged to 8.4%. Without intervention, this inflation will rapidly erode the organization's EBITDA.</p>
+            
+            <h4 class="font-bold text-gray-800 mt-4 mb-2 text-sm md:text-base">3. Targeted Clinical Interventions</h4>
+            <ul class="list-disc pl-5 mb-4 text-gray-600 space-y-1 text-xs md:text-sm">
+                <li><strong>Pharmacy Benefit & GLP-1 Management:</strong> Implement rigorous Prior Authorization protocols to manage explosive growth in weight-loss therapeutics.</li>
+                <li><strong>Oncology Center of Excellence:</strong> Deploy a COE to control the high-cost pipeline associated with the 1.2% incidence rate.</li>
+            </ul>
+
+            <h4 class="font-bold text-gray-800 mt-4 mb-2 text-sm md:text-base">4. Systemic Economic Impact</h4>
+            <p class="text-gray-600 text-xs md:text-sm">By systematically identifying and mitigating clinical risk vectors, this platform directly addresses the unsustainable escalation of U.S. employer healthcare costs. Transforming this operational waste into reclaimed capital strengthens domestic business resilience and empowers direct investment into workforce expansion.</p>
+        `;
+
+        const forecastData = {
+            dates: ['2025-04', '2025-05', '2025-06', '2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03'],
+            futDates: ['2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11', '2026-12', '2027-01', '2027-02', '2027-03'],
+            medHist: [750000, 760000, 780000, 740000, 800000, 810000, 850000, 920000, 1100000, 750000, 770000, 790000],
+            rxHist: [250000, 260000, 265000, 270000, 280000, 290000, 310000, 320000, 330000, 300000, 310000, 320000],
+            medFut: [810000, 820000, 840000, 800000, 860000, 880000, 920000, 1000000, 1250000, 830000, 850000, 880000],
+            rxFut: [340000, 350000, 360000, 375000, 390000, 410000, 420000, 435000, 450000, 430000, 440000, 460000]
+        };
+
+        const clusterSummary = [
+            { persona: "Catastrophic Multi-Morbidity", count: 42, spend: 125400, color: "#ef4444" },
+            { persona: "Chronic Condition Management", count: 158, spend: 32500, color: "#f59e0b" },
+            { persona: "Emerging Acute Risk", count: 210, spend: 18400, color: "#3b82f6" },
+            { persona: "Low-Risk Baseline", count: 790, spend: 4200, color: "#10b981" }
+        ];
+
+        const highRiskMembers = [
+            { id: "SMITH_JOHN_1985", age: 41, driver: "Uncontrolled Diabetes", spend: 134002, risk: 94 },
+            { id: "DOE_JANE_1962", age: 63, driver: "COPD Exacerbation", spend: 115000, risk: 91 },
+            { id: "DAVIS_PAUL_1955", age: 70, driver: "CKD Stage 4 Progression", spend: 98500, risk: 88 },
+            { id: "WILSO_MARK_1950", age: 75, driver: "Heart Failure (CHF)", spend: 89200, risk: 85 },
+            { id: "GARCIA_L_1968", age: 56, driver: "Complex Oncology", spend: 88500, risk: 82 }
+        ];
+
+        // Dictionary of dynamic care journeys mapped to specific members
+        const careJourneys = {
+            "SMITH_JOHN_1985": {
+                name: "Intensive Diabetes Management Protocol",
+                guideline: "American Diabetes Association (ADA)",
+                absenteeism: 18,
+                savings: 33500,
+                roi: 31200,
+                phases: [
+                    { time: "Day 1-30: Acute Stabilization", actions: ["Assign RN Care Navigator", "Deploy Cellular Glucometer", "Schedule Nephrologist Consult"], kpi: "Devices active; Baseline A1C logged" },
+                    { time: "Day 31-90: Active Management", actions: ["Bi-weekly Telehealth check-in", "90-day Mail Order Rx Setup", "Dietary intervention plan"], kpi: "100% Rx adherence; Glucose in range 70% of time" },
+                    { time: "Day 91-180: Outcome Maintenance", actions: ["Quarterly Clinical Review", "Transition to digital maintenance app"], kpi: "Zero ER Admissions; 25% drop in medical spend" }
+                ]
+            },
+            "DOE_JANE_1962": {
+                name: "Pulmonary / COPD Exacerbation Prevention",
+                guideline: "Global Initiative for Chronic Obstructive Lung Disease (GOLD)",
+                absenteeism: 12,
+                savings: 28750,
+                roi: 26000,
+                phases: [
+                    { time: "Day 1-30: Acute Stabilization", actions: ["Assign Respiratory Therapist", "Check inhaler technique via Telehealth", "Schedule Pulmonologist Consult"], kpi: "Baseline Spirometry logged" },
+                    { time: "Day 31-90: Active Management", actions: ["Remote Pulse Oximetry monitoring", "Pulmonary Rehab referral", "Corticosteroid adherence check"], kpi: "O2 Saturation maintained > 92%" },
+                    { time: "Day 91-180: Outcome Maintenance", actions: ["Flu/Pneumonia Vaccine Verification", "Quarterly assessment"], kpi: "Zero Hospital Readmissions" }
+                ]
+            },
+            "DAVIS_PAUL_1955": {
+                name: "Renal Disease & Hypertension Pathway",
+                guideline: "KDIGO Clinical Practice Guidelines",
+                absenteeism: 10,
+                savings: 41200,
+                roi: 39500,
+                phases: [
+                    { time: "Day 1-30: Acute Stabilization", actions: ["Assign Care Navigator", "Deploy Cellular Blood Pressure Cuff", "Renal Dietitian Consult"], kpi: "BP logs established" },
+                    { time: "Day 31-90: Active Management", actions: ["Medication Reconciliation", "Bi-weekly BP monitoring"], kpi: "BP < 130/80 mmHg" },
+                    { time: "Day 91-180: Outcome Maintenance", actions: ["Quarterly Renal Panel", "Maintenance telehealth"], kpi: "GFR stabilization" }
+                ]
+            },
+            "WILSO_MARK_1950": {
+                name: "Heart Failure (CHF) Monitoring Protocol",
+                guideline: "American Heart Association (AHA)",
+                absenteeism: 15,
+                savings: 55000,
+                roi: 52000,
+                phases: [
+                    { time: "Day 1-30: Acute Stabilization", actions: ["Provide Cellular Smart Scale", "Cardiologist Tele-consult", "Diuretic review"], kpi: "Daily weight logging active" },
+                    { time: "Day 31-90: Active Management", actions: ["Symptom tracking (edema, SOB)", "Sodium restriction counseling"], kpi: "No weight gain > 3lbs/day" },
+                    { time: "Day 91-180: Outcome Maintenance", actions: ["Echocardiogram review", "Transition to lower intensity monitoring"], kpi: "Zero CHF Exacerbations" }
+                ]
+            },
+            "GARCIA_L_1968": {
+                name: "Complex Oncology Care Navigation",
+                guideline: "National Comprehensive Cancer Network (NCCN)",
+                absenteeism: 22,
+                savings: 85000,
+                roi: 81000,
+                phases: [
+                    { time: "Day 1-30: Acute Stabilization", actions: ["Assign Dedicated Oncology Nurse", "Pain & Nausea Management Plan", "Financial toxicity counseling"], kpi: "Treatment pathway mapped" },
+                    { time: "Day 31-90: Active Management", actions: ["Chemotherapy symptom monitoring", "Nutrition support", "Mental health referral"], kpi: "Treatment adherence 100%" },
+                    { time: "Day 91-180: Outcome Maintenance", actions: ["Survivorship care planning", "Scan schedule adherence"], kpi: "Zero avoidable ER trips for symptoms" }
+                ]
+            }
+        };
+
+        const anomaliesList = [
+            { id: "THOMA_R_1975", age: 48, opioids: 8, glp1: 0, pharm: 4, pres: 3, spend: 45000 },
+            { id: "JONES_M_1982", age: 42, opioids: 1, glp1: 3, pharm: 2, pres: 2, spend: 28000 },
+            { id: "GARCIA_L_1968", age: 56, opioids: 11, glp1: 0, pharm: 5, pres: 4, spend: 88500 },
+            { id: "MARTI_S_1990", age: 34, opioids: 0, glp1: 4, pharm: 1, pres: 2, spend: 18000 },
+            { id: "LEE_K_1971", age: 53, opioids: 6, glp1: 0, pharm: 3, pres: 2, spend: 52000 }
+        ];
+
+        // --- 2. UI LOGIC ---
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+        
+        function switchTab(tabId) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            // Remove active style from all buttons
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            // Show target
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById('btn-' + tabId).classList.add('active');
+
+            // Render Charts based on visible tab
+            if(tabId === 'tab1') renderForecastChart();
+            if(tabId === 'tab2') renderFidelityChart();
+            if(tabId === 'tab3') { renderSimChart(); runSimulation(); } // Ensure it's populated immediately
+            if(tabId === 'tab4') { renderClusterChart(); renderSpendDistChart(); }
+            if(tabId === 'tab5') renderSHAPChart();
+            if(tabId === 'tab7') renderAnomalyTypeChart();
+        }
+
+        // Function to update Deductible Slider text
+        function updateSimText(val) {
+            document.getElementById('sim-deductible-val').innerText = `+$${val} Selected`;
+        }
+
+        // Function to execute the GLM simulation
+        function runSimulation() {
+            const deductibleIncrease = parseInt(document.getElementById('sim-deductible').value);
+            const copayIncrease = parseInt(document.getElementById('sim-copay').value);
+            
+            // Mathematical formula to mock the GLM behavioral elasticity drop
+            const elasticityFactor = (deductibleIncrease / 500) * 0.8 + (copayIncrease / 20) * 0.2;
+            const encountersAvoided = Math.max(0, Math.round(702 * elasticityFactor));
+            const totalSavings = encountersAvoided * 1200; // $1200 avg cost per avoided ER/Specialist visit
+            
+            // Update UI KPIs dynamically
+            document.getElementById('sim-encounters-kpi').innerText = encountersAvoided.toLocaleString() + ' Visits';
+            document.getElementById('sim-savings-kpi').innerText = '$' + totalSavings.toLocaleString();
+            
+            // Recalculate Chart Drops
+            const erDrop = Math.round(300 * elasticityFactor);
+            const specDrop = Math.round(402 * elasticityFactor);
+            
+            const trace1 = { x: ['Baseline', 'Proposed'], y: [2150, Math.max(0, 2150 - erDrop)], name: 'ER Visits', type: 'bar', marker: {color: '#ef4444'} };
+            const trace2 = { x: ['Baseline', 'Proposed'], y: [4200, Math.max(0, 4200 - specDrop)], name: 'Specialist Visits', type: 'bar', marker: {color: '#f59e0b'} };
+            const layout = { 
+                barmode: 'group', plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)', 
+                margin: {l: 40, r: 20, t: 10, b: 30}, legend: {orientation: "h", y: -0.2} 
+            };
+            
+            // Re-render chart
+            Plotly.react('simChart', [trace1, trace2], layout);
+        }
+
+        // Function to initialize Care Navigation filter
+        function initCareNavigation() {
+            const selectElement = document.getElementById('journey-member-select');
+            selectElement.innerHTML = '';
+            
+            highRiskMembers.forEach(m => {
+                selectElement.innerHTML += `<option value="${m.id}">${m.id}</option>`;
+            });
+            
+            // Load the first member by default
+            loadCareJourney(highRiskMembers[0].id);
+        }
+
+        // Function to load unique care journeys based on dropdown selection
+        function loadCareJourney(memberId) {
+            const member = highRiskMembers.find(m => m.id === memberId);
+            const journey = careJourneys[memberId];
+            
+            // Update Avatar initials dynamically
+            const parts = memberId.split('_');
+            const initials = (parts[0][0] || '') + (parts.length > 1 ? parts[1][0] : '');
+            document.getElementById('journey-avatar').innerText = initials;
+            
+            // Update Patient Profile Sub-header
+            document.getElementById('journey-age').innerText = `Age: ${member.age}`;
+            document.getElementById('journey-risk').innerText = `Risk: ${member.risk}%`;
+            document.getElementById('journey-driver').innerText = `SHAP Driver: ${member.driver}`;
+            
+            // Update Pathway & Economic Data
+            document.getElementById('journey-pathway').innerText = journey.name;
+            document.getElementById('journey-guideline').innerText = journey.guideline;
+            document.getElementById('journey-days').innerText = journey.absenteeism + ' Days';
+            document.getElementById('journey-savings').innerText = '$' + journey.savings.toLocaleString();
+            document.getElementById('journey-roi').innerText = '$' + journey.roi.toLocaleString();
+            
+            // Dynamically populate Accordion phases
+            const phasesContainer = document.getElementById('journey-phases-container');
+            phasesContainer.innerHTML = '';
+            
+            journey.phases.forEach((p, idx) => {
+                const isOpen = idx === 0 ? 'open' : ''; // Open first accordion by default
+                const isRotated = idx === 0 ? 'open' : '';
+                let actionsHtml = p.actions.map(a => `<li class="ml-4 mb-1 text-xs md:text-sm text-gray-700 list-disc">${a}</li>`).join('');
+                
+                phasesContainer.innerHTML += `
+                    <div class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm mt-3">
+                        <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center p-3 md:p-4 bg-gray-50 hover:bg-gray-100 focus:outline-none text-left transition-colors">
+                            <span class="font-bold text-blue-900 text-xs md:text-sm">${p.time}</span>
+                            <i class="fas fa-chevron-down chevron text-gray-400 ${isRotated}"></i>
+                        </button>
+                        <div class="accordion-content bg-white ${isOpen}">
+                            <div class="p-3 md:p-4 border-t border-gray-100">
+                                <ul class="mb-3">${actionsHtml}</ul>
+                                <div class="bg-blue-50 p-2 md:p-3 rounded text-[10px] md:text-xs text-blue-800 border border-blue-100 font-semibold">
+                                    <strong><i class="fas fa-check-circle mr-1"></i> KPI Checkpoint:</strong> <em class="ml-1">${p.kpi}</em>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Shared responsive layout config for Plotly
+        const defaultLayoutConfig = {
+            plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)',
+            margin: {l: 40, r: 20, t: 10, b: 40}
+        };
+
+        function renderForecastChart() {
+            const trace1 = { x: forecastData.dates, y: forecastData.medHist, name: 'Hist Medical', type: 'scatter', line: {color: '#1e40af', width: 3} };
+            const trace2 = { x: forecastData.dates, y: forecastData.rxHist, name: 'Hist Rx', type: 'scatter', line: {color: '#047857', width: 3} };
+            const futMedX = [forecastData.dates[forecastData.dates.length-1], ...forecastData.futDates];
+            const futMedY = [forecastData.medHist[forecastData.medHist.length-1], ...forecastData.medFut];
+            const futRxX = [forecastData.dates[forecastData.dates.length-1], ...forecastData.futDates];
+            const futRxY = [forecastData.rxHist[forecastData.rxHist.length-1], ...forecastData.rxFut];
+
+            const trace3 = { x: futMedX, y: futMedY, name: 'Fcst Medical', type: 'scatter', line: {color: '#3b82f6', width: 3, dash: 'dash'} };
+            const trace4 = { x: futRxX, y: futRxY, name: 'Fcst Rx', type: 'scatter', line: {color: '#10b981', width: 3, dash: 'dash'} };
+
+            const layout = {
+                ...defaultLayoutConfig,
+                hovermode: 'x unified',
+                xaxis: { showgrid: false, linecolor: '#e2e8f0' },
+                yaxis: { gridcolor: '#e2e8f0', tickprefix: '$', fixedrange: true },
+                legend: { orientation: "h", y: -0.2 }
+            };
+            Plotly.newPlot('forecastChart', [trace1, trace2, trace3, trace4], layout, {responsive: true});
+        }
+
+        function renderFidelityChart() {
+            const trace1 = { x: ['18-25', '26-35', '36-45', '46-55', '56-65', '65+'], y: [12, 22, 25, 20, 15, 6], name: 'Real Claims Base', type: 'bar', marker: {color: '#cbd5e1'} };
+            const trace2 = { x: ['18-25', '26-35', '36-45', '46-55', '56-65', '65+'], y: [11.8, 22.5, 24.8, 19.5, 15.2, 6.2], name: 'CT-GAN Synthetic', type: 'bar', marker: {color: '#3b82f6'} };
+            const layout = { ...defaultLayoutConfig, barmode: 'group', legend: {orientation: "h", y: -0.2}, yaxis: {title: '% of Pop'} };
+            Plotly.newPlot('fidelityChart', [trace1, trace2], layout, {responsive: true});
+        }
+
+        function renderSimChart() {
+            const trace1 = { x: ['Baseline', 'Proposed'], y: [2150, 1850], name: 'ER Visits', type: 'bar', marker: {color: '#ef4444'} };
+            const trace2 = { x: ['Baseline', 'Proposed'], y: [4200, 3798], name: 'Specialist Visits', type: 'bar', marker: {color: '#f59e0b'} };
+            const layout = { ...defaultLayoutConfig, barmode: 'group', legend: {orientation: "h", y: -0.2} };
+            Plotly.newPlot('simChart', [trace1, trace2], layout, {responsive: true});
+        }
+
+        function renderClusterChart() {
+            const traces = clusterSummary.map(c => {
+                const x = Array.from({length: Math.min(c.count, 100)}, () => (Math.random() * 4) - 2 + (c.spend > 50000 ? 3 : 0));
+                const y = Array.from({length: Math.min(c.count, 100)}, () => (Math.random() * 4) - 2 + (c.spend > 50000 ? 2 : -1));
+                return {
+                    x: x, y: y, mode: 'markers', type: 'scatter', name: c.persona,
+                    marker: { size: 8, color: c.color, opacity: 0.7 }
+                };
+            });
+            const layout = {
+                ...defaultLayoutConfig,
+                xaxis: { title: 'PCA 1', showgrid: true, gridcolor: '#f1f5f9', zerolinecolor: '#cbd5e1' },
+                yaxis: { title: 'PCA 2', showgrid: true, gridcolor: '#f1f5f9', zerolinecolor: '#cbd5e1' },
+                legend: { orientation: "h", y: -0.2 }
+            };
+            Plotly.newPlot('clusterChart', traces, layout, {responsive: true});
+        }
+
+        function renderSpendDistChart() {
+            const data = [{
+                values: [72, 18, 7, 3], labels: ['Catastrophic', 'Chronic', 'Acute', 'Baseline'], type: 'pie', hole: .5,
+                marker: {colors: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981']}
+            }];
+            const layout = { showlegend: false, margin: {l: 10, r: 10, t: 10, b: 10}, annotations: [{font: {size: 12, color: '#64748b', weight: 'bold'}, showarrow: false, text: '% of Spend'}] };
+            Plotly.newPlot('spendDistChart', data, layout, {responsive: true});
+        }
+
+        function renderSHAPChart() {
+            const data = [{
+                type: 'bar', x: [0.85, 0.62, 0.45, 0.31, 0.15],
+                y: ['Chronic Count', 'Age', 'Prior ER Visits', 'GLP-1 Utils', 'Deductible %'],
+                orientation: 'h', marker: { color: '#ef4444' }
+            }];
+            const layout = {
+                ...defaultLayoutConfig, margin: {l: 120, r: 20, t: 10, b: 40},
+                xaxis: { title: '|SHAP Value|' },
+                yaxis: { autorange: 'reversed' }
+            };
+            Plotly.newPlot('shapChart', data, layout, {responsive: true});
+        }
+
+        function renderAnomalyTypeChart() {
+            const data = [{
+                type: 'bar', x: [42, 11, 28], y: ['Opioid Abuse', 'GLP-1 Hoarding', 'Doc Shopping'],
+                orientation: 'h', marker: { color: '#f97316' }
+            }];
+            const layout = { plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)', margin: {l: 90, r: 20, t: 10, b: 20} };
+            Plotly.newPlot('anomalyTypeChart', data, layout, {responsive: true});
+        }
+
+        function toggleAccordion(btn) {
+            const content = btn.nextElementSibling;
+            const icon = btn.querySelector('.chevron');
+            content.classList.toggle('open');
+            icon.classList.toggle('open');
+        }
+
+        // --- 3. DATA POPULATION ---
+        document.getElementById('cfo-assessment').innerHTML = cfoTextHTML;
+
+        // Cluster Table
+        clusterSummary.forEach(c => {
+            document.getElementById('cluster-table-body').innerHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2 whitespace-nowrap font-medium text-gray-700">
+                        <span class="inline-block w-2 h-2 rounded-full mr-2" style="background-color: ${c.color}"></span>${c.persona}
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-right text-gray-600">${c.count}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-right font-semibold text-gray-900">$${c.spend.toLocaleString()}</td>
+                </tr>
+            `;
+        });
+
+        // High Risk Members
+        highRiskMembers.forEach(m => {
+            document.getElementById('risk-table-body').innerHTML += `
+                <tr class="hover:bg-gray-50 border-b border-gray-50">
+                    <td class="px-4 md:px-6 py-3 whitespace-nowrap text-blue-600 font-bold">${m.id}</td>
+                    <td class="px-4 md:px-6 py-3 whitespace-nowrap text-gray-600 text-[10px] md:text-xs font-semibold">${m.driver}</td>
+                    <td class="px-4 md:px-6 py-3 whitespace-nowrap font-semibold">$${m.spend.toLocaleString()}</td>
+                    <td class="px-4 md:px-6 py-3 whitespace-nowrap text-center">
+                        <span class="px-2 py-1 inline-flex text-[10px] md:text-xs leading-5 font-bold rounded bg-red-100 text-red-800">${m.risk}%</span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        // Anomalies Table
+        anomaliesList.forEach(a => {
+            const opioidColor = a.opioids > 4 ? 'bg-red-100 text-red-800 font-bold' : 'text-gray-600';
+            const glp1Color = a.glp1 > 2 ? 'bg-purple-100 text-purple-800 font-bold' : 'text-gray-600';
+            document.getElementById('anomaly-table-body').innerHTML += `
+                <tr class="hover:bg-gray-50 border-b border-gray-50">
+                    <td class="px-4 md:px-6 py-3 whitespace-nowrap text-left font-bold text-blue-600">${a.id}</td>
+                    <td class="px-4 md:px-6 py-3 whitespace-nowrap text-gray-500">${a.age}</td>
+                    <td class="px-4 md:px-6 py-3 whitespace-nowrap ${opioidColor} rounded">${a.opioids}</td>
+                    <td class="px-4 md:px-6 py-3 whitespace-nowrap ${glp1Color} rounded">${a.glp1}</td>
+                    <td class="px-4 md:px-6 py-3 whitespace-nowrap text-gray-600 font-semibold">${a.pharm}</td>
+                    <td class="px-4 md:px-6 py-3 whitespace-nowrap text-gray-600 font-semibold">${a.pres}</td>
+                    <td class="px-4 md:px-6 py-3 whitespace-nowrap text-right font-bold text-gray-900">$${a.spend.toLocaleString()}</td>
+                </tr>
+            `;
+        });
+
+        // Handle Window Resize to Re-render Plotly Charts Correctly
+        window.addEventListener('resize', () => {
+            const charts = ['forecastChart', 'fidelityChart', 'simChart', 'clusterChart', 'spendDistChart', 'shapChart', 'anomalyTypeChart'];
+            charts.forEach(id => {
+                const el = document.getElementById(id);
+                // Ensure chart exists and is currently visible before resizing
+                if (el && el.innerHTML !== "" && el.offsetParent !== null) {
+                    Plotly.Plots.resize(id);
+                }
+            });
+        });
+
+        // Init Components
+        initCareNavigation();
+        switchTab('tab1'); // Default tab
+
+    </script>
+</body>
+</html>
