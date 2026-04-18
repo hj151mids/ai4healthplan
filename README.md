@@ -142,7 +142,7 @@ The Challenge: Fraudulent patterns (e.g., coordinated "doctor shopping" networks
 
 Algorithms: Isolation Forest + Local Outlier Factor (LOF).
 
-Methodology: * Isolation Forest (Global Outliers): Recursively partitions the high-dimensional pharmacy feature space. Anomalies are isolated closer to the root of the trees. The anomaly score is defined by the average path length $E(h(x))$ required to isolate observation $x$:
+Methodology: Isolation Forest (Global Outliers): Recursively partitions the high-dimensional pharmacy feature space. Anomalies are isolated closer to the root of the trees. The anomaly score is defined by the average path length $E(h(x))$ required to isolate observation $x$:
 
 $$s(x, n) = 2^{-\frac{E(h(x))}{c(n)}}$$
 
