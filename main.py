@@ -5,7 +5,6 @@ Author: Haoliang Jiang
 This module serves as the scalable web layer (FastAPI) connecting the interactive 
 enterprise dashboard to the underlying Machine Learning logic. 
 
-[USCIS EVIDENCE STRATEGY]:
 To prove technical feasibility and eliminate "Black Box" ambiguity, models are NOT 
 loaded from pre-compiled .pkl artifacts. Instead, the logic (XGBoost, GLM, Isolation Forest) 
 is exposed via programmatic execution routes to demonstrate actuarial rigor and algorithmic 
