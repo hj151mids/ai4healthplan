@@ -10,7 +10,7 @@ import json
 import time
 
 # --- ARCHITECTURAL INTEGRATION: Evaluation of Advanced Models ---
-# To satisfy technical rigor for the NIW RFE, we evaluate multiple 
+# We evaluate multiple 
 # state-of-the-art time-series architectures.
 try:
     from tensorflow.keras.models import Sequential
