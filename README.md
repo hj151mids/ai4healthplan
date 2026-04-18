@@ -198,7 +198,7 @@ The Year 1-2 scaling phases require the deployment of reclaimed healthcare capit
 
 1x Partnership Director (SOC Code 11-2021): Tasked with onboarding self-funded mid-market employers.
 
-5.2 The Impracticality of PERM (National Interest Waiver Justification)
+### 5.2 The Impracticality of PERM (National Interest Waiver Justification)
 
 The Willis Towers Watson and NBER data definitively prove that the U.S. commercial healthcare market is hemorrhaging $360 Billion annually, pushing 28.7 million Americans into cost desperation.
 
