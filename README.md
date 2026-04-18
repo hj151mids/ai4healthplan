@@ -2,7 +2,7 @@
 
 Author: Haoliang Jiang
 
-Version: 5.0.0 (Research-Grade Technical Whitepaper & ML Methodology Report)
+Version: 2.0.0 (Technical Whitepaper & ML Methodology Report)
 
 Domain: Actuarial Data Science, Machine Learning, Public Health Economics, Enterprise Cloud Architecture
 
