@@ -1,0 +1,27 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0.post1
+pydantic==2.5.2
+pydantic-settings==2.1.0
+starlette==0.27.0
+python-dotenv==1.0.0
+streamlit==1.28.2
+plotly==5.18.0
+pandas==2.1.3
+numpy==1.26.2
+scipy==1.11.4
+scikit-learn==1.3.2
+xgboost==2.0.2
+statsmodels==0.14.0  # Required for GLM / Poisson Regression
+prophet==1.1.5       # Time-series baseline
+shap==0.43.0
+faker==20.1.0
+ctgan==0.8.0         # GAN for HIPAA-compliant synthetic data
+google-generativeai==0.3.1
+transformers==4.35.2
+torch==2.1.1         # PyTorch backend for HuggingFace Transformers
+google-cloud-storage==2.13.0
+google-cloud-bigquery==3.13.0
+google-cloud-secret-manager==2.17.0
+pytest==7.4.3
+httpx==0.25.1        # Asynchronous testing for FastAPI
+pytest-asyncio==0.21.1
