@@ -164,47 +164,25 @@ Outcome: The LLM transforms abstract ML risk probabilities into a standardized, 
 
 To guarantee national scalability, adhere to HIPAA/HITRUST security mandates, and process millions of U.S. worker claims with near-zero latency, AI4HealthPlan is engineered entirely as a distributed, serverless ecosystem on the Google Cloud Platform (GCP).
 
-Data Ingestion & Warehousing (Google BigQuery): * Acts as the centralized enterprise data warehouse. BigQuery's columnar storage architecture ensures AES-256 encrypted, at-rest data segregation for multi-tenant employer clients.
+Data Ingestion & Warehousing (Google BigQuery): Acts as the centralized enterprise data warehouse. BigQuery's columnar storage architecture ensures AES-256 encrypted, at-rest data segregation for multi-tenant employer clients.
 
 Handles Petabyte-scale SQL querying for ML feature engineering, utilizing federated queries to process complex FHIR (Fast Healthcare Interoperability Resources) and EDI 837 claims datasets instantly.
 
-Model Training & Orchestration (Vertex AI): * The heavy computational lifting for the ML pipelines (XGBoost, PCA, CT-GAN generation) is decoupled from the application layer and orchestrated via Vertex AI.
+Model Training & Orchestration (Vertex AI): The heavy computational lifting for the ML pipelines (XGBoost, PCA, CT-GAN generation) is decoupled from the application layer and orchestrated via Vertex AI.
 
 This enables distributed training jobs across dynamically provisioned NVIDIA T4/A100 GPU clusters, drastically reducing computational latency and allowing the platform to ingest and train on new 100,000+ employee populations overnight.
 
-Production Serving & Auto-Scaling (GCP Cloud Run / Knative): * The backend application (built in Python/FastAPI) and the frontend dashboard are fully containerized using Docker.
+Production Serving & Auto-Scaling (GCP Cloud Run / Knative): The backend application (built in Python/FastAPI) and the frontend dashboard are fully containerized using Docker.
 
 Deployed on Cloud Run, the application benefits from stateless, serverless execution. The infrastructure automatically scales from zero to thousands of concurrent containers during peak HR Open Enrollment forecasting periods, and scales back down during low traffic, ensuring 99.99% availability and high cost-efficiency.
 
-Security, Compliance & IAM: * VPC Service Controls: The entire architecture is enclosed within a Virtual Private Cloud (VPC) perimeter to prevent data exfiltration.
+Security, Compliance & IAM: VPC Service Controls: The entire architecture is enclosed within a Virtual Private Cloud (VPC) perimeter to prevent data exfiltration.
 
 Cloud IAM: Enforces Principle of Least Privilege (PoLP) via strict Identity and Access Management role-based access controls.
 
 Secret Manager: Sensitive credentials, including the Gemini LLM API keys and database URIs, are securely vaulted and injected into the containers exclusively at runtime, fulfilling rigorous enterprise HITRUST and SOC2 Type II security standards.
 
-## 5. Pro Forma Financial & Operational Methodology (Prong 3 Alignment)
-
-To address foundational operational feasibility and explicitly establish the "Lack of Basis" requirement for scaling an AI non-profit, this business plan utilizes objective, third-party labor metrics.
-
-### 5.1 Objective Basis for Personnel Projections
-
-All personnel scaling projections are strictly pegged to the U.S. Department of Labor (DOL) / Bureau of Labor Statistics (BLS) Prevailing Wage Data for the Durham-Chapel Hill, NC MSA.
-
-The Year 1-2 scaling phases require the deployment of reclaimed healthcare capital (EBITDA) to fund the following essential U.S. roles required to operate this predictive infrastructure:
-
-1x Senior Data Scientist (SOC Code 15-2051): Responsible for maintaining Vertex AI pipelines and CT-GAN synthesis.
-
-1x Healthcare Compliance/HIPAA Analyst (SOC Code 13-1041): Ensuring regulatory data security and Cloud IAM governance.
-
-1x Partnership Director (SOC Code 11-2021): Tasked with onboarding self-funded mid-market employers.
-
-### 5.2 The Impracticality of PERM (National Interest Waiver Justification)
-
-The Willis Towers Watson and NBER data definitively prove that the U.S. commercial healthcare market is hemorrhaging $360 Billion annually, pushing 28.7 million Americans into cost desperation.
-
-AI4HealthPlan is a fully realized, mathematically rigorous, and financially viable technological intervention that actively protects U.S. domestic employment and societal welfare. Bending the 9.1% inflation curve allows employers to fund the exact BLS prevailing wage jobs outlined above. Consequently, subjecting the architect of this platform to a multi-year PERM labor certification process would actively delay critical technological intervention, acting as a direct, ongoing detriment to the urgent economic interests and financial security of the United States workforce.
-
-## 6. GCP Deployment Runbook
+## 5. GCP Deployment Runbook
 
 The platform is container-ready. To deploy the serving layer to GCP Cloud Run:
 
